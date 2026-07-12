@@ -29,7 +29,13 @@ const SOURCES = [
   { name: "Fox News", url: "https://moxie.foxnews.com/google-publisher/latest.xml" },
   { name: "ZeroHedge", url: "https://feeds.feedburner.com/zerohedge/feed" },
   { name: "Gateway Pundit", url: "https://www.thegatewaypundit.com/feed/" },
-  { name: "Daily Caller", url: "https://dailycaller.com/feed/" },
+  {
+    name: "Daily Caller",
+    urls: [
+      "https://feeds.feedburner.com/dailycaller",
+      "https://dailycaller.com/feed/"
+    ]
+  },
   { name: "Washington Examiner", url: "https://www.washingtonexaminer.com/feed/" },
   {
     name: "American Thinker",
