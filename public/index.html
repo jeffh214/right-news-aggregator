@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Breaking Right News</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script>
+      // Apply saved theme before paint to avoid a flash of the wrong theme.
+      (function () {
+        try {
+          var t = localStorage.getItem("theme");
+          if (t) document.documentElement.dataset.theme = t;
+        } catch (_e) {
+          /* localStorage unavailable */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <main class="container">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Live Feed</p>
+          <h1>Breaking Right News</h1>
+        </div>
+        <div class="topbar-actions">
+          <button id="themeToggle" type="button" class="theme-toggle" aria-label="Toggle theme">Dark</button>
+          <button id="refreshBtn">Refresh</button>
+        </div>
+      </header>
+
+      <section class="controls">
+        <div class="control">
+          <label for="sourceSelect">Source</label>
+          <select id="sourceSelect">
+            <option value="">All Sources</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="limitInput">Headlines</label>
+          <input id="limitInput" type="number" min="10" max="250" value="80" />
+        </div>
+        <div class="control">
+          <label for="autoRefresh">Auto-refresh</label>
+          <select id="autoRefresh">
+            <option value="0">Off</option>
+            <option value="60">Every 1 min</option>
+            <option value="300">Every 5 min</option>
+            <option value="600">Every 10 min</option>
+          </select>
+        </div>
+        <div class="control control-search">
+          <label for="searchInput">Search</label>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="Filter headlines by keyword..."
+            autocomplete="off"
+          />
+        </div>
+      </section>
+
+      <section id="statusLine" class="status"></section>
+      <section id="infoLine" class="info"></section>
+      <section id="errorsLine" class="errors"></section>
+
+      <section id="leadStory" class="lead-story"></section>
+
+      <section id="newsList" class="news-list"></section>
+
+      <section id="earlierSection" class="earlier-section" hidden>
+        <h2 class="section-title">Earlier Headlines</h2>
+        <p class="section-note">Stories older than 3 hours.</p>
+        <div id="earlierList" class="news-list"></div>
+      </section>
+
+      <section id="layoffSection" class="layoff-section" hidden>
+        <h2 class="section-title">
+          Verizon Layoff Watch
+          <span class="section-sub">via TheLayoff.com</span>
+        </h2>
+        <div id="layoffList" class="news-list"></div>
+      </section>
+    </main>
+
+    <template id="newsCardTemplate">
+      <article class="card" data-card>
+        <a class="card-thumb-link" data-thumb-link target="_blank" rel="noopener" hidden>
+          <img class="card-thumb" data-image alt="" loading="lazy" decoding="async" />
+        </a>
+        <p class="meta">
+          <span class="badge" data-badge hidden></span>
+          <span data-source></span>
+          <span>•</span>
+          <time data-time></time>
+        </p>
+        <h2 data-title></h2>
+        <p data-summary></p>
+        <a data-link target="_blank" rel="noreferrer noopener">Read article</a>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
