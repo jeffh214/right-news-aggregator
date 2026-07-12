@@ -65,23 +65,57 @@
       <section id="infoLine" class="info"></section>
       <section id="errorsLine" class="errors"></section>
 
-      <section id="leadStory" class="lead-story"></section>
+      <div class="layout">
+        <div class="main-column">
+          <section id="leadStory" class="lead-story"></section>
 
-      <section id="newsList" class="news-list"></section>
+          <section id="newsList" class="news-list"></section>
 
-      <section id="earlierSection" class="earlier-section" hidden>
-        <h2 class="section-title">Earlier Headlines</h2>
-        <p class="section-note">Stories older than 3 hours.</p>
-        <div id="earlierList" class="news-list"></div>
-      </section>
+          <section id="earlierSection" class="earlier-section" hidden>
+            <h2 class="section-title">Earlier Headlines</h2>
+            <p class="section-note">Stories older than 3 hours.</p>
+            <div id="earlierList" class="news-list"></div>
+          </section>
 
-      <section id="layoffSection" class="layoff-section" hidden>
-        <h2 class="section-title">
-          Verizon Layoff Watch
-          <span class="section-sub">via TheLayoff.com</span>
-        </h2>
-        <div id="layoffList" class="news-list"></div>
-      </section>
+          <section id="layoffSection" class="layoff-section" hidden>
+            <h2 class="section-title">
+              Verizon Layoff Watch
+              <span class="section-sub">via TheLayoff.com</span>
+            </h2>
+            <div id="layoffList" class="news-list"></div>
+          </section>
+        </div>
+
+        <aside class="x-sidebar" aria-label="X.com trends">
+          <div class="x-sidebar-inner">
+            <header class="x-sidebar-header">
+              <p class="x-kicker">From X.com</p>
+              <h2 class="x-sidebar-title">Live Pulse</h2>
+              <p id="xTrendsMeta" class="x-sidebar-meta">Loading US trends…</p>
+            </header>
+
+            <section class="x-panel">
+              <h3 class="x-panel-title">
+                <span class="x-dot x-dot-breaking"></span>
+                Breaking on X
+              </h3>
+              <ol id="xBreakingList" class="x-trend-list"></ol>
+            </section>
+
+            <section class="x-panel">
+              <h3 class="x-panel-title">
+                <span class="x-dot x-dot-trending"></span>
+                Trending now
+              </h3>
+              <ol id="xTrendingList" class="x-trend-list"></ol>
+            </section>
+
+            <a class="x-sidebar-link" href="https://x.com/explore/tabs/trending" target="_blank" rel="noreferrer noopener">
+              Open X Explore
+            </a>
+          </div>
+        </aside>
+      </div>
     </main>
 
     <template id="newsCardTemplate">

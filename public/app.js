@@ -14,6 +14,9 @@ const statusLine = document.getElementById("statusLine");
 const infoLine = document.getElementById("infoLine");
 const errorsLine = document.getElementById("errorsLine");
 const template = document.getElementById("newsCardTemplate");
+const xBreakingList = document.getElementById("xBreakingList");
+const xTrendingList = document.getElementById("xTrendingList");
+const xTrendsMeta = document.getElementById("xTrendsMeta");
 const API_BASE = window.__NEWS_API_BASE__ || "";
 
 function buildApiUrl(pathWithQuery) {
@@ -275,6 +278,57 @@ function renderFiltered() {
   renderNews(items);
 }
 
+function renderXTrendList(container, items) {
+  container.innerHTML = "";
+  if (!items.length) {
+    const empty = document.createElement("li");
+    empty.className = "x-empty";
+    empty.style.listStyle = "none";
+    empty.textContent = "No topics available right now.";
+    container.appendChild(empty);
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = item.url || "#";
+    a.target = "_blank";
+    a.rel = "noreferrer noopener";
+    a.textContent = item.name || "Untitled";
+    a.title = `Search “${item.name || ""}” on X`;
+    li.appendChild(a);
+    fragment.appendChild(li);
+  });
+  container.appendChild(fragment);
+}
+
+async function loadXTrends({ fresh = false } = {}) {
+  if (!xBreakingList || !xTrendingList || !xTrendsMeta) return;
+  xTrendsMeta.textContent = fresh ? "Refreshing X trends…" : "Loading US trends…";
+
+  const params = new URLSearchParams();
+  if (fresh) params.set("fresh", "1");
+  const resp = await fetch(buildApiUrl(`/api/x-trends?${params.toString()}`));
+  if (!resp.ok) throw new Error("Could not load X trends.");
+  const data = await resp.json();
+
+  renderXTrendList(xBreakingList, data.breaking || []);
+  renderXTrendList(xTrendingList, data.trending || []);
+
+  if (!data.ok && !(data.trending || []).length) {
+    xTrendsMeta.textContent = data.error
+      ? `X trends unavailable: ${data.error}`
+      : "X trends unavailable.";
+    return;
+  }
+
+  const parts = [`US · updated ${formatRelative(data.fetchedAt)}`];
+  if (data.stale) parts.push("showing cached list");
+  xTrendsMeta.textContent = parts.join(" · ");
+}
+
 async function loadSources() {
   const resp = await fetch(buildApiUrl("/api/sources"));
   if (!resp.ok) throw new Error("Could not load sources.");
@@ -359,7 +413,10 @@ function refreshInfoLine() {
 function runAutoRefresh() {
   // Skip background ticks; refresh again when the tab is visible.
   if (document.hidden) return;
-  loadNews({ fresh: true }).catch((error) => {
+  Promise.all([
+    loadNews({ fresh: true }),
+    loadXTrends({ fresh: true }).catch(() => {})
+  ]).catch((error) => {
     statusLine.textContent = "";
     errorsLine.textContent = humanizeNetworkError(error);
   });
@@ -397,7 +454,10 @@ themeToggle.addEventListener("click", () => {
 });
 
 refreshBtn.addEventListener("click", () => {
-  loadNews({ fresh: true }).catch((error) => {
+  Promise.all([
+    loadNews({ fresh: true }),
+    loadXTrends({ fresh: true }).catch(() => {})
+  ]).catch((error) => {
     statusLine.textContent = "";
     errorsLine.textContent = humanizeNetworkError(error);
   });
@@ -452,7 +512,7 @@ async function init() {
   restoreAutoRefresh();
   try {
     await loadSources();
-    await loadNews();
+    await Promise.all([loadNews(), loadXTrends().catch(() => {})]);
   } catch (error) {
     statusLine.textContent = "";
     errorsLine.textContent = humanizeNetworkError(error);

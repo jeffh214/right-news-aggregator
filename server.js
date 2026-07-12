@@ -586,6 +586,97 @@ app.get("/api/news", async (req, res) => {
   });
 });
 
+const X_TRENDS_URL = "https://trends24.in/united-states/";
+const X_TRENDS_CACHE_TTL_MS = 5 * 60 * 1000;
+let xTrendsCache = null;
+
+function xSearchUrl(topic) {
+  return `https://x.com/search?q=${encodeURIComponent(topic)}&src=trend_click&f=live`;
+}
+
+function parseTrends24List($, listEl) {
+  const trends = [];
+  const seen = new Set();
+  $(listEl)
+    .find("ol li a.trend-link")
+    .each((_, el) => {
+      const name = $(el).text().replace(/\s+/g, " ").trim();
+      if (!name) return;
+      const key = name.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      const countText = $(el).closest(".trend-name").find(".tweet-count").attr("data-count") || "";
+      trends.push({
+        name,
+        url: xSearchUrl(name),
+        tweetCount: countText || null
+      });
+    });
+  return trends;
+}
+
+async function fetchXTrendsFromTrends24() {
+  const html = await fetchHtmlViaCurl(X_TRENDS_URL);
+  if (!/trend-link|list-container/i.test(html)) {
+    throw new Error("Could not parse X trends page.");
+  }
+  const $ = cheerio.load(html);
+  const lists = $(".list-container")
+    .toArray()
+    .slice(0, 2)
+    .map((el) => parseTrends24List($, el));
+  const trending = lists[0] || [];
+  if (!trending.length) {
+    throw new Error("No X trends found.");
+  }
+  const previousNames = new Set((lists[1] || []).map((t) => t.name.toLowerCase()));
+  const newlyRising = trending.filter((t) => !previousNames.has(t.name.toLowerCase()));
+  const breaking = (newlyRising.length ? newlyRising : trending).slice(0, 8);
+
+  return {
+    ok: true,
+    fetchedAt: new Date().toISOString(),
+    location: "United States",
+    source: "trends24.in",
+    breaking,
+    trending: trending.slice(0, 12)
+  };
+}
+
+async function fetchXTrendsCached({ fresh = false } = {}) {
+  if (!fresh && xTrendsCache && Date.now() - xTrendsCache.ts < X_TRENDS_CACHE_TTL_MS) {
+    return xTrendsCache.result;
+  }
+  try {
+    const result = await fetchXTrendsFromTrends24();
+    xTrendsCache = { ts: Date.now(), result };
+    return result;
+  } catch (error) {
+    if (xTrendsCache?.result?.ok) {
+      return {
+        ...xTrendsCache.result,
+        stale: true,
+        warning: error.message
+      };
+    }
+    return {
+      ok: false,
+      fetchedAt: new Date().toISOString(),
+      location: "United States",
+      source: "trends24.in",
+      breaking: [],
+      trending: [],
+      error: error.message
+    };
+  }
+}
+
+app.get("/api/x-trends", async (req, res) => {
+  const fresh = req.query.fresh === "1" || req.query.fresh === "true";
+  const data = await fetchXTrendsCached({ fresh });
+  res.json(data);
+});
+
 app.use(express.static(path.join(__dirname, "public")));
 
 app.listen(PORT, "0.0.0.0", () => {
